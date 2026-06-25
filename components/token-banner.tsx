@@ -15,8 +15,8 @@ export function TokenBanner({ tokens, reverse = false, subtle = false, withHeade
     >
       {withHeaderGutters ? (
         <>
-          <div className="pointer-events-none absolute inset-y-0 left-0 z-20 w-40 bg-[#11134a]/75 backdrop-blur-[2px] md:w-56 lg:w-8" />
-          <div className="pointer-events-none absolute inset-y-0 right-0 z-20 w-40 bg-[#11134a]/75 backdrop-blur-[2px] md:w-56 lg:w-8" />
+          <div className="pointer-events-none absolute inset-y-0 left-0 z-20 w-4 bg-[#11134a]/55 backdrop-blur-[2px] sm:w-24 md:w-6 lg:w-8" />
+          <div className="pointer-events-none absolute inset-y-0 right-0 z-20 w-4 bg-[#11134a]/55 backdrop-blur-[2px] sm:w-24 md:w-56 lg:w-8" />
         </>
       ) : null}
       <div className="overflow-hidden">

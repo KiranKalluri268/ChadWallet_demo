@@ -139,8 +139,8 @@ export function TradingPage({ tokens, token, holders, trades }: { tokens: Token[
   }, [authenticated, token.address, wallet]);
 
   return (
-    <section className="mx-auto grid max-w-[96rem] gap-4 px-4 pb-28 pt-5 lg:grid-cols-[18rem_minmax(0,1fr)_22rem]">
-      <aside className="overflow-hidden rounded-lg border border-white/10 bg-white/[0.04] p-4 lg:sticky lg:top-20" style={{ maxHeight: "calc(100vh - 16rem)" }}>
+    <section className="mx-auto grid w-full max-w-[96rem] min-w-0 gap-4 px-4 pb-20 pt-24 lg:grid-cols-[18rem_minmax(0,1fr)_22rem] lg:pb-16 lg:pt-5">
+      <aside className="min-w-0 overflow-hidden rounded-lg border border-white/10 bg-white/[0.04] p-4 lg:sticky lg:top-20" style={{ maxHeight: "calc(100vh - 16rem)" }}>
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-sm font-black uppercase tracking-[0.16em] text-white/55">Trending</h2>
           <Radio className="h-4 w-4 text-acid" />
@@ -165,7 +165,7 @@ export function TradingPage({ tokens, token, holders, trades }: { tokens: Token[
                 }
               }}
               className={clsx(
-                "flex items-center justify-between rounded-lg border p-3 transition",
+                "flex min-w-0 items-center justify-between gap-3 rounded-lg border p-3 transition",
                 item.address === token.address ? "border-acid/50 bg-acid/10" : "border-white/8 bg-ink/40 hover:border-white/20"
               )}
             >
@@ -176,7 +176,7 @@ export function TradingPage({ tokens, token, holders, trades }: { tokens: Token[
                   <div className="truncate text-xs text-white/45">{item.name}</div>
                 </div>
               </div>
-              <div className={clsx("text-right text-xs font-black", item.change24h >= 0 ? "text-mint" : "text-ember")}>
+              <div className={clsx("shrink-0 text-right text-xs font-black", item.change24h >= 0 ? "text-mint" : "text-ember")}>
                 {pendingAddress === item.address && isSwitching ? "Loading" : `${item.change24h >= 0 ? "+" : ""}${item.change24h.toFixed(1)}%`}
               </div>
             </Link>
@@ -184,17 +184,17 @@ export function TradingPage({ tokens, token, holders, trades }: { tokens: Token[
         </div>
       </aside>
 
-      <section className="space-y-4">
+      <section className="min-w-0 space-y-4">
         <div className="rounded-lg border border-white/10 bg-white/[0.04] p-5">
           {isSwitching ? (
             <SummarySkeleton />
           ) : (
-            <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
-              <div className="flex items-center gap-4">
+            <div className="flex min-w-0 flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
+              <div className="flex min-w-0 items-center gap-4">
                 <TokenMark token={token} large />
-                <div>
+                <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-2">
-                    <h1 className="text-3xl font-black">${token.symbol}</h1>
+                    <h1 className="min-w-0 truncate text-3xl font-black">${token.symbol}</h1>
                     <span className="rounded-full bg-acid/15 px-2 py-1 text-xs font-black text-acid">SOLANA</span>
                     <button
                       onClick={() => toggleWatchlist(token.address, watchlist, setWatchlist)}
@@ -224,7 +224,7 @@ export function TradingPage({ tokens, token, holders, trades }: { tokens: Token[
                   <p className="mt-1 text-xs text-white/35">{copied ? "Address copied" : `${token.address.slice(0, 8)}...${token.address.slice(-8)}`}</p>
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+              <div className="grid w-full min-w-0 grid-cols-2 gap-3 sm:w-auto sm:grid-cols-4">
                 <Metric label="Price" value={formatUsd(token.price, token.price < 1 ? 6 : 2)} />
                 <Metric label="24h" value={`${token.change24h >= 0 ? "+" : ""}${token.change24h.toFixed(1)}%`} accent={token.change24h >= 0} />
                 <Metric label="Volume" value={`$${formatCompact(token.volume24h)}`} />
@@ -242,7 +242,7 @@ export function TradingPage({ tokens, token, holders, trades }: { tokens: Token[
             </div>
             <CandlestickChart className="h-5 w-5 text-acid" />
           </div>
-          <div className="relative h-[22rem] overflow-hidden rounded-lg border border-white/10 bg-ink">
+          <div className="relative h-[22rem] min-w-0 overflow-hidden rounded-lg border border-white/10 bg-ink">
             {isSwitching ? <BlockSkeleton /> : <ChartSvg token={token} trades={trades} />}
             {!isSwitching ? (
               <div className="absolute left-4 top-4 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-bold text-white/55">
@@ -252,11 +252,11 @@ export function TradingPage({ tokens, token, holders, trades }: { tokens: Token[
           </div>
         </div>
 
-        <div className="grid gap-4 xl:grid-cols-2">
+        <div className="grid min-w-0 gap-4 xl:grid-cols-2">
           <Panel title="Top holders" icon={<ShieldCheck className="h-5 w-5 text-acid" />}>
             {isSwitching ? <RowsSkeleton /> : <div className="space-y-3">
               {holders.map((holder) => (
-                <div key={holder.owner} className="grid grid-cols-[1fr_auto] gap-3 rounded-lg bg-ink/55 p-3">
+                <div key={holder.owner} className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto] gap-3 rounded-lg bg-ink/55 p-3">
                   <div>
                     <div className="font-bold">{holder.owner}</div>
                     <div className="text-xs text-white/45">{formatCompact(holder.amount)} tokens</div>
@@ -273,7 +273,7 @@ export function TradingPage({ tokens, token, holders, trades }: { tokens: Token[
           <Panel title="Live trades" icon={<TrendingUp className="h-5 w-5 text-acid" />}>
             {isSwitching ? <RowsSkeleton /> : <div className="space-y-3">
               {trades.map((trade) => (
-                <div key={trade.id} className="grid grid-cols-[auto_1fr_auto] items-center gap-3 rounded-lg bg-ink/55 p-3">
+                <div key={trade.id} className="grid min-w-0 grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 rounded-lg bg-ink/55 p-3">
                   <span className={clsx("rounded-full px-2 py-1 text-xs font-black", trade.side === "buy" ? "bg-mint/15 text-mint" : "bg-ember/15 text-ember")}>
                     {trade.side.toUpperCase()}
                   </span>
@@ -292,7 +292,7 @@ export function TradingPage({ tokens, token, holders, trades }: { tokens: Token[
         </div>
       </section>
 
-      <aside className="space-y-4 lg:sticky lg:top-20 lg:h-max">
+      <aside className="min-w-0 space-y-4 lg:sticky lg:top-20 lg:h-max">
         <div className="rounded-lg border border-acid/20 bg-white/[0.05] p-4">
           <div className="mb-4 grid grid-cols-2 rounded-lg bg-ink p-1">
             {(["buy", "sell"] as const).map((mode) => (
@@ -468,7 +468,7 @@ function TradeInput({
   return (
     <label className="block rounded-lg border border-white/10 bg-ink/70 p-4">
       <span className="text-xs font-bold uppercase tracking-[0.12em] text-white/40">{label}</span>
-      <span className="mt-2 flex items-center gap-3">
+      <span className="mt-2 flex min-w-0 items-center gap-3">
         <input
           value={value}
           onChange={(event) => onChange?.(event.target.value)}
@@ -476,8 +476,8 @@ function TradeInput({
           inputMode="decimal"
           className={clsx("min-w-0 flex-1 bg-transparent text-2xl font-black outline-none", loading && "animate-pulse text-white/35")}
         />
-        <span className="inline-flex items-center gap-2 rounded-full border border-white/10 px-3 py-2 text-sm font-black">
-          {symbol}
+        <span className="inline-flex max-w-[7rem] shrink-0 items-center gap-2 rounded-full border border-white/10 px-3 py-2 text-sm font-black">
+          <span className="truncate">{symbol}</span>
           <ChevronDown className="h-4 w-4 text-white/45" />
         </span>
       </span>

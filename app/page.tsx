@@ -1,18 +1,34 @@
 import Image from "next/image";
-import { Bell, ChartCandlestick, ShieldCheck, Sparkles, Users, Zap } from "lucide-react";
+import { Bell, ChartCandlestick, Sparkles, Users, Zap } from "lucide-react";
 import { Nav } from "@/components/nav";
 import { StoreButtons } from "@/components/store-buttons";
 import { TokenBanner } from "@/components/token-banner";
 import { getTrendingTokens } from "@/lib/market-data";
-import { formatCompact } from "@/lib/format";
+import { clsx, formatCompact } from "@/lib/format";
+import type { Token } from "@/lib/types";
 
-const features = [
-  { icon: Users, label: "Social Trading", text: "Watch what top Solana traders are buying in real time." },
-  { icon: Zap, label: "Trade Instantly", text: "Jump from trend discovery to token action in seconds." },
-  { icon: ChartCandlestick, label: "Research Smarter", text: "Token analytics, live trades, holders, and launch signals in one flow." },
-  { icon: ShieldCheck, label: "Self Custody", text: "Fast onboarding while keeping ownership of your crypto." },
-  { icon: Bell, label: "Real Alerts", text: "Never miss the tokens moving across the ChadWallet feed." },
-  { icon: Sparkles, label: "Meme Native", text: "Built for launches, KOL moves, and the speed of Solana culture." }
+const featureCards = [
+  {
+    eyebrow: "Social signal",
+    title: "follow traders before the crowd",
+    body: "Track what wallets and KOLs are buying while the chart is still forming.",
+    image: "/screens/discover.png",
+    icon: Users
+  },
+  {
+    eyebrow: "Token intelligence",
+    title: "see the move, then inspect the token",
+    body: "Price action, holders, liquidity, and live trades sit one click away.",
+    image: "/screens/token.png",
+    icon: ChartCandlestick
+  },
+  {
+    eyebrow: "Preview mode",
+    title: "quote fast without signing a thing",
+    body: "Jupiter quote previews keep the demo real while transaction execution stays disabled.",
+    image: "/flow/buy-sell-4.png",
+    icon: Zap
+  }
 ];
 
 export default async function Home() {
@@ -20,120 +36,188 @@ export default async function Home() {
   const leader = tokens[0];
 
   return (
-    <main className="min-h-screen bg-ink text-shell">
-      <Nav />
-      <section className="relative overflow-hidden">
-        <div className="mx-auto grid min-h-[calc(100vh-5rem)] max-w-7xl items-center gap-10 px-4 py-12 sm:px-6 lg:grid-cols-[1.05fr_0.95fr] lg:py-16">
-          <div className="max-w-3xl">
-            <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-acid/30 bg-acid/10 px-4 py-2 text-xs font-black uppercase tracking-[0.18em] text-acid">
-              Solana, all in one app
-            </div>
-            <h1 className="text-5xl font-black leading-[0.92] text-white sm:text-7xl lg:text-8xl">
-              ChadWallet
-              <span className="block text-acid">catches memes early.</span>
-            </h1>
-            <p className="mt-6 max-w-2xl text-lg leading-8 text-white/72 sm:text-xl">
-              The social-first Solana trading app for meme coin hunters. Discover top traders, track launches, and buy trending tokens before the move gets crowded.
-            </p>
-            <div className="mt-8">
-              <StoreButtons />
-            </div>
-            <div className="mt-10 grid max-w-xl grid-cols-3 gap-3">
-              <Stat label="Trending vol" value={`$${formatCompact(leader.volume24h)}`} />
-              <Stat label="Top token" value={`$${leader.symbol}`} />
-              <Stat label="24h move" value={`${leader.change24h >= 0 ? "+" : ""}${leader.change24h.toFixed(1)}%`} />
-            </div>
-          </div>
-          <div className="relative mx-auto w-full max-w-[34rem]">
-            <div className="absolute inset-8 rounded-[4rem] bg-acid/25 blur-3xl" />
-            <video
-              className="relative aspect-[9/16] w-full rounded-[2rem] border border-white/10 object-cover shadow-glow"
-              src="/video/chadwallet.mp4"
-              poster="/screens/splash.png"
-              autoPlay
-              loop
-              muted
-              playsInline
-            />
-          </div>
-        </div>
-      </section>
-
-      <section id="social" className="border-y border-white/10 bg-shell py-16 text-ink">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6">
-          <div className="grid gap-8 lg:grid-cols-[0.85fr_1.15fr] lg:items-center">
-            <div>
-              <p className="text-sm font-black uppercase tracking-[0.18em] text-moss/60">Never miss out again</p>
-              <h2 className="mt-3 text-4xl font-black leading-tight sm:text-6xl">Trade where the signal starts.</h2>
-              <p className="mt-5 text-lg leading-8 text-ink/65">
-                ChadWallet turns the messy meme coin firehose into a fast feed of launches, KOL moves, trader flows, and token analytics.
-              </p>
-            </div>
-            <div className="grid gap-4 sm:grid-cols-3">
-              <ImageTile src="/screens/discover.png" alt="Discover tokens" />
-              <ImageTile src="/screens/kol.png" alt="KOL feed" />
-              <ImageTile src="/screens/token.png" alt="Token analytics" />
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section id="signals" className="mx-auto max-w-7xl px-4 py-16 sm:px-6">
-        <div className="mb-8 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
-          <div>
-            <p className="text-sm font-black uppercase tracking-[0.18em] text-acid">Built for Solana speed</p>
-            <h2 className="mt-3 text-4xl font-black sm:text-6xl">From feed to fill.</h2>
-          </div>
-          <p className="max-w-xl text-white/60">A focused demo of the core ChadWallet promise: discover, evaluate, and act while a token is still moving.</p>
-        </div>
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {features.map((feature) => (
-            <article key={feature.label} className="rounded-lg border border-white/10 bg-white/[0.04] p-6">
-              <feature.icon className="h-7 w-7 text-acid" />
-              <h3 className="mt-5 text-xl font-black">{feature.label}</h3>
-              <p className="mt-3 leading-7 text-white/62">{feature.text}</p>
-            </article>
-          ))}
-        </div>
-      </section>
-
-      <section className="border-y border-white/10 bg-white/[0.04] py-16">
-        <div className="mx-auto grid max-w-7xl gap-8 px-4 sm:px-6 lg:grid-cols-4">
-          {["launch-4", "buy-sell-4", "portfolio-4", "relaunch-4"].map((name) => (
-            <div key={name} className="overflow-hidden rounded-lg border border-white/10 bg-ink">
-              <Image src={`/flow/${name}.png`} alt={name.replaceAll("-", " ")} width={420} height={760} className="h-full w-full object-cover" />
-            </div>
-          ))}
-        </div>
-      </section>
-
-      <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6">
-        <div className="flex flex-col items-start justify-between gap-8 rounded-lg border border-acid/25 bg-acid p-8 text-ink sm:p-10 lg:flex-row lg:items-center">
-          <div>
-            <h2 className="text-4xl font-black sm:text-6xl">Ready to hunt?</h2>
-            <p className="mt-4 max-w-2xl text-lg font-semibold text-ink/70">Open the trading demo, pick a Solana token, and preview the flow from signal to quote.</p>
-          </div>
-          <StoreButtons />
-        </div>
-      </section>
+    <main className="bg-night min-h-screen overflow-hidden text-shell">
+      <div className="relative">
+        <Nav />
+      </div>
+      <Hero tokens={tokens} leader={leader} />
+      <SignalSection />
+      <FeatureCards />
+      <EverywhereSection />
+      <FinalCta leader={leader} />
       <TokenBanner tokens={tokens} reverse />
     </main>
   );
 }
 
+function Hero({ tokens, leader }: { tokens: Token[]; leader: Token }) {
+  return (
+    <section className="hero-full relative overflow-hidden border-b border-white/10">
+      <div className="cinematic-hero absolute inset-0" />
+      <div className="hero-orbit-wide" />
+      <div className="hero-orbit-inner" />
+      <div className="hero-soft-left" />
+      <div className="hero-soft-right" />
+
+      <OrbitToken token={tokens[0]} className="hero-token-1" size="lg" />
+      <OrbitToken token={tokens[1]} className="hero-token-2" />
+      <OrbitToken token={tokens[2]} className="hero-token-3" />
+      <OrbitToken token={tokens[3]} className="hero-token-4" size="lg" />
+      <OrbitToken token={tokens[4]} className="hero-token-5" size="sm" />
+
+      <div className="relative z-20">
+        <TokenBanner tokens={tokens} subtle withHeaderGutters />
+      </div>
+
+      <div className="relative z-10 mx-auto flex min-h-[calc(100vh-4.5rem)] max-w-6xl flex-col items-center justify-center px-4 py-20 text-center sm:px-6">
+        <p className="mb-5 rounded-full border border-acid/30 bg-acid/10 px-4 py-2 text-xs font-black uppercase tracking-[0.22em] text-acid">
+          now hunting on solana
+        </p>
+        <h1 className="max-w-5xl text-5xl font-black leading-[0.96] text-white sm:text-7xl lg:text-[5.9rem]">
+          ChadWallet
+          <span className="block text-white/92 lg:whitespace-nowrap">catches memes early.</span>
+        </h1>
+        <p className="mt-6 max-w-2xl text-lg font-semibold leading-8 text-white/62 sm:text-xl">
+          Join the social-first Solana trading app built for launches, top-trader signals, and previewing the next token before it gets crowded.
+        </p>
+        <div className="mt-8">
+          <StoreButtons />
+        </div>
+        <div className="mt-10 grid w-full max-w-xl grid-cols-3 gap-3">
+          <Stat label="Trending vol" value={`$${formatCompact(leader.volume24h)}`} />
+          <Stat label="Top token" value={`$${leader.symbol}`} />
+          <Stat label="24h move" value={`${leader.change24h >= 0 ? "+" : ""}${leader.change24h.toFixed(1)}%`} />
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function SignalSection() {
+  return (
+    <section id="social" className="bg-night relative border-b border-white/10 py-24">
+      <div className="absolute inset-x-0 top-0 h-48 bg-gradient-to-b from-[#11134A] to-transparent opacity-35" />
+      <div className="relative mx-auto grid max-w-7xl gap-10 px-4 sm:px-6 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
+        <div>
+          <p className="text-sm font-black uppercase tracking-[0.22em] text-acid">never miss out again</p>
+          <h2 className="mt-4 max-w-xl text-5xl font-black leading-none text-white sm:text-7xl">trade where the signal starts.</h2>
+          <p className="mt-6 max-w-xl text-lg leading-8 text-white/56">
+            ChadWallet turns the messy meme coin firehose into a focused feed of launches, KOL moves, trader flows, and token analytics.
+          </p>
+        </div>
+        <div className="grid gap-4 sm:grid-cols-3">
+          <PhoneCard src="/screens/discover.png" title="Discover" />
+          <PhoneCard src="/screens/kol.png" title="Traders" lift />
+          <PhoneCard src="/screens/token.png" title="Analyze" />
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function FeatureCards() {
+  return (
+    <section id="signals" className="bg-night py-24">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6">
+        <div className="mb-10 text-center">
+          <p className="text-sm font-black uppercase tracking-[0.22em] text-acid">from feed to fill</p>
+          <h2 className="mt-4 text-5xl font-black leading-none text-white sm:text-7xl">built for the token hunt.</h2>
+        </div>
+        <div className="grid gap-6 lg:grid-cols-3">
+          {featureCards.map((card) => (
+            <article key={card.title} className="bg-card-night relative overflow-hidden rounded-lg border border-white/10 p-7">
+              <div className="feature-card-glow absolute inset-0" />
+              <div className="relative z-10 flex min-h-[35rem] flex-col">
+                <div className="mb-6 flex h-11 w-11 items-center justify-center rounded-full bg-acid text-ink">
+                  <card.icon className="h-5 w-5" />
+                </div>
+                <p className="text-xs font-black uppercase tracking-[0.2em] text-acid">{card.eyebrow}</p>
+                <h3 className="mt-4 text-3xl font-black leading-tight text-white">{card.title}</h3>
+                <p className="mt-4 leading-7 text-white/55">{card.body}</p>
+                <div className="feature-card-media relative mt-auto">
+                  <Image
+                    src={card.image}
+                    alt={card.title}
+                    width={520}
+                    height={760}
+                    className="feature-card-image"
+                  />
+                </div>
+              </div>
+            </article>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function EverywhereSection() {
+  return (
+    <section className="cinematic-section relative overflow-hidden border-y border-white/10 py-24">
+      <div className="relative mx-auto max-w-7xl px-4 text-center sm:px-6">
+        <p className="text-sm font-black uppercase tracking-[0.22em] text-acid">now available on mobile</p>
+        <h2 className="mx-auto mt-4 max-w-4xl text-5xl font-black leading-none text-white sm:text-7xl">
+          open the feed on your phone. preview the trade on web.
+        </h2>
+        <p className="mx-auto mt-6 max-w-2xl text-lg leading-8 text-white/56">
+          A landing-page demo with real market data, Privy auth, and a preview-only trading surface for safe review.
+        </p>
+        <div className="relative mx-auto mt-14 max-w-5xl">
+          <div className="absolute inset-x-8 top-10 h-64 rounded-full bg-acid/10 blur-3xl" />
+          <div className="relative grid gap-5 sm:grid-cols-4">
+            {["launch-4", "buy-sell-4", "portfolio-4", "relaunch-4"].map((name) => (
+              <div key={name} className="overflow-hidden rounded-lg border border-white/10 bg-white/[0.04]">
+                <Image src={`/flow/${name}.png`} alt={name.replaceAll("-", " ")} width={420} height={760} className="h-full w-full object-cover" />
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function FinalCta({ leader }: { leader: Token }) {
+  return (
+    <section className="bg-night relative px-4 pb-36 pt-20 sm:px-6">
+      <div className="mx-auto flex max-w-7xl flex-col gap-8 border-t border-white/10 pt-14 lg:flex-row lg:items-end lg:justify-between">
+        <div>
+          <p className="text-sm font-black uppercase tracking-[0.22em] text-acid">preview the hunt</p>
+          <h2 className="mt-4 max-w-3xl text-5xl font-black leading-none text-white sm:text-7xl">ready to chase ${leader.symbol}?</h2>
+          <p className="mt-5 max-w-2xl text-lg leading-8 text-white/56">
+            Open the trading demo, pick a Solana token, and inspect the preview flow from signal to quote.
+          </p>
+        </div>
+        <StoreButtons />
+      </div>
+    </section>
+  );
+}
+
+function OrbitToken({ token, className, size = "md" }: { token: Token; className: string; size?: "sm" | "md" | "lg" }) {
+  const sizeClass = size === "lg" ? "h-16 w-16 text-base" : size === "sm" ? "h-8 w-8 text-[10px]" : "h-12 w-12 text-sm";
+
+  return (
+    <div className={clsx("absolute z-10 hidden rounded-full border border-white/15 bg-white/10 p-1 shadow-2xl backdrop-blur md:block", className)}>
+      <div className={clsx("grid place-items-center rounded-full bg-acid font-black leading-none text-ink", sizeClass)}>{token.symbol.slice(0, 2).toUpperCase()}</div>
+    </div>
+  );
+}
+
 function Stat({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-lg border border-white/10 bg-white/[0.04] p-4">
-      <div className="text-xs font-bold uppercase tracking-[0.14em] text-white/45">{label}</div>
+    <div className="rounded-lg border border-white/10 bg-white/[0.05] p-4 backdrop-blur">
+      <div className="text-xs font-bold uppercase tracking-[0.14em] text-white/40">{label}</div>
       <div className="mt-2 text-xl font-black text-white">{value}</div>
     </div>
   );
 }
 
-function ImageTile({ src, alt }: { src: string; alt: string }) {
+function PhoneCard({ src, title, lift = false }: { src: string; title: string; lift?: boolean }) {
   return (
-    <div className="overflow-hidden rounded-lg border border-ink/10 bg-ink">
-      <Image src={src} alt={alt} width={360} height={740} className="h-full w-full object-cover" />
+    <div className={clsx("overflow-hidden rounded-lg border border-white/10 bg-white/[0.04] p-3", lift && "sm:-translate-y-8")}>
+      <Image src={src} alt={title} width={360} height={740} className="h-full w-full rounded-md object-cover" />
     </div>
   );
 }

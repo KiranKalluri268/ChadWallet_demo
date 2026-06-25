@@ -13,7 +13,10 @@ export default async function TokenTradePage({ params }: { params: { tokenAddres
 
   return (
     <main className="min-h-screen bg-ink text-shell">
-      <Nav />
+      <TokenBanner tokens={tokens} subtle />
+      <div className="relative">
+        <Nav />
+      </div>
       <TradingPage tokens={tokens} token={token} holders={holders} trades={trades} />
       <TokenBanner tokens={tokens} reverse />
     </main>

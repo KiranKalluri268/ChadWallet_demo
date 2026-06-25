@@ -31,11 +31,11 @@ a {
 }
 
 .ticker-track {
-  animation: ticker 34s linear infinite;
+  animation: ticker 58s linear infinite;
 }
 
 .ticker-track-reverse {
-  animation: ticker-reverse 38s linear infinite;
+  animation: ticker-reverse 46s linear infinite;
 }
 
 .ticker-shell:hover .ticker-track,
@@ -68,4 +68,134 @@ a {
 .no-scrollbar {
   -ms-overflow-style: none;
   scrollbar-width: none;
+}
+
+.cinematic-hero {
+  background:
+    radial-gradient(circle at 50% 42%, rgba(54, 69, 190, 0.38), transparent 27rem),
+    radial-gradient(circle at 18% 82%, rgba(184, 255, 60, 0.12), transparent 22rem),
+    linear-gradient(180deg, #11134a 0%, #060712 72%, #05060c 100%);
+}
+
+.cinematic-section {
+  background: radial-gradient(circle at 50% 10%, rgba(54, 69, 190, 0.28), transparent 28rem), #080914;
+}
+
+.hero-orbit-wide,
+.hero-orbit-inner {
+  position: absolute;
+  border: 1px dashed rgba(255, 255, 255, 0.1);
+  border-radius: 9999px;
+}
+
+.hero-orbit-wide {
+  left: -12rem;
+  right: -12rem;
+  top: -20rem;
+  height: 58rem;
+}
+
+.hero-orbit-inner {
+  left: 10%;
+  right: 10%;
+  top: 4rem;
+  height: 45rem;
+}
+
+.hero-soft-left,
+.hero-soft-right {
+  position: absolute;
+  bottom: -7rem;
+  width: 30rem;
+  height: 30rem;
+  border-radius: 9999px;
+  filter: blur(64px);
+}
+
+.hero-soft-left {
+  left: -10rem;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.hero-soft-right {
+  right: -8rem;
+  background: rgba(129, 140, 248, 0.12);
+}
+
+.feature-card-glow {
+  background: radial-gradient(circle at 50% 70%, rgba(184, 255, 60, 0.13), transparent 18rem);
+}
+
+.bg-night {
+  background: #05060c;
+}
+
+.bg-card-night {
+  background: #111118;
+}
+
+.hero-full {
+  min-height: 100vh;
+}
+
+.hero-token-1 {
+  left: 18%;
+  top: 18%;
+}
+
+.hero-token-2 {
+  right: 20%;
+  top: 22%;
+}
+
+.hero-token-3 {
+  left: 28%;
+  bottom: 16%;
+}
+
+.hero-token-4 {
+  right: 25%;
+  bottom: 24%;
+}
+
+.hero-token-5 {
+  right: 34%;
+  bottom: 12%;
+}
+
+.feature-card-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top center;
+  filter: saturate(0.86) brightness(0.82);
+}
+
+.feature-card-media {
+  height: 21rem;
+  overflow: hidden;
+  border-radius: 0.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.feature-card-media::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, transparent 48%, rgba(17, 17, 24, 0.92) 100%);
+  pointer-events: none;
+}
+
+.header-glow {
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.08),
+    0 0 28px rgba(184, 255, 60, 0.28),
+    0 0 56px rgba(54, 69, 190, 0.22);
+}
+
+.logo-blur {
+  box-shadow:
+    0 10px 36px rgba(0, 0, 0, 0.28),
+    0 0 40px rgba(255, 255, 255, 0.18);
 }

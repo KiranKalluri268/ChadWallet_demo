@@ -139,8 +139,8 @@ export function TradingPage({ tokens, token, holders, trades }: { tokens: Token[
   }, [authenticated, token.address, wallet]);
 
   return (
-    <section className="mx-auto grid max-w-[96rem] gap-4 px-4 py-5 lg:grid-cols-[18rem_minmax(0,1fr)_22rem]">
-      <aside className="rounded-lg border border-white/10 bg-white/[0.04] p-4 lg:sticky lg:top-20 lg:h-[calc(100vh-7rem)]">
+    <section className="mx-auto grid max-w-[96rem] gap-4 px-4 pb-28 pt-5 lg:grid-cols-[18rem_minmax(0,1fr)_22rem]">
+      <aside className="overflow-hidden rounded-lg border border-white/10 bg-white/[0.04] p-4 lg:sticky lg:top-20" style={{ maxHeight: "calc(100vh - 16rem)" }}>
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-sm font-black uppercase tracking-[0.16em] text-white/55">Trending</h2>
           <Radio className="h-4 w-4 text-acid" />
@@ -154,7 +154,7 @@ export function TradingPage({ tokens, token, holders, trades }: { tokens: Token[
             className="min-w-0 flex-1 bg-transparent text-sm font-semibold outline-none placeholder:text-white/35"
           />
         </label>
-        <div className="space-y-2 overflow-y-auto lg:max-h-[calc(100vh-10rem)]">
+        <div className="max-h-[28rem] space-y-2 overflow-y-auto pr-1 lg:max-h-none" style={{ maxHeight: "calc(100vh - 23rem)" }}>
           {filteredTokens.map((item) => (
             <Link
               href={`/trade/${item.address}`}

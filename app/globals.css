@@ -1,0 +1,71 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+  background: #090b0a;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at 18% 8%, rgba(104, 247, 179, 0.18), transparent 28rem),
+    radial-gradient(circle at 88% 18%, rgba(255, 122, 61, 0.18), transparent 24rem),
+    #090b0a;
+  color: #f7f8ef;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.ticker-track {
+  animation: ticker 34s linear infinite;
+}
+
+.ticker-track-reverse {
+  animation: ticker-reverse 38s linear infinite;
+}
+
+.ticker-shell:hover .ticker-track,
+.ticker-shell:hover .ticker-track-reverse {
+  animation-play-state: paused;
+}
+
+@keyframes ticker {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@keyframes ticker-reverse {
+  from {
+    transform: translateX(-50%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}

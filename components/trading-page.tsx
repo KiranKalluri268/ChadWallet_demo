@@ -243,7 +243,7 @@ export function TradingPage({ tokens, token, holders, trades }: { tokens: Token[
             <CandlestickChart className="h-5 w-5 text-acid" />
           </div>
           <div className="relative h-[22rem] overflow-hidden rounded-lg border border-white/10 bg-ink">
-            {isSwitching ? <BlockSkeleton /> : <ChartSvg positive={token.change24h >= 0} />}
+            {isSwitching ? <BlockSkeleton /> : <ChartSvg token={token} trades={trades} />}
             {!isSwitching ? (
               <div className="absolute left-4 top-4 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-bold text-white/55">
                 {token.symbol}/USD
@@ -495,8 +495,12 @@ function copyAddress(address: string, setCopied: (value: boolean) => void) {
   window.setTimeout(() => setCopied(false), 1600);
 }
 
-function ChartSvg({ positive }: { positive: boolean }) {
+function ChartSvg({ token, trades }: { token: Token; trades: Trade[] }) {
+  const positive = token.change24h >= 0;
   const stroke = positive ? "#68F7B3" : "#FF7A3D";
+  const points = getChartPoints(token, trades);
+  const linePath = buildSmoothPath(points);
+  const fillPath = `${linePath} L900 360 L0 360 Z`;
 
   return (
     <svg viewBox="0 0 900 360" className="h-full w-full" preserveAspectRatio="none" role="img" aria-label="Token price chart">
@@ -512,10 +516,61 @@ function ChartSvg({ positive }: { positive: boolean }) {
       {Array.from({ length: 10 }).map((_, index) => (
         <line key={`v-${index}`} x1={index * 100} x2={index * 100} y1="0" y2="360" stroke="rgba(255,255,255,0.05)" />
       ))}
-      <path d="M0 285 C90 245 110 292 190 230 C270 170 310 205 390 150 C480 86 520 118 610 78 C715 30 770 82 900 42 L900 360 L0 360 Z" fill="url(#chartFill)" />
-      <path d="M0 285 C90 245 110 292 190 230 C270 170 310 205 390 150 C480 86 520 118 610 78 C715 30 770 82 900 42" fill="none" stroke={stroke} strokeWidth="5" />
+      <path d={fillPath} fill="url(#chartFill)" />
+      <path d={linePath} fill="none" stroke={stroke} strokeWidth="5" strokeLinecap="round" />
+      {points.map((point, index) => (
+        index % 3 === 0 ? <circle key={`${point.x}-${point.y}`} cx={point.x} cy={point.y} r="4" fill={stroke} opacity="0.7" /> : null
+      ))}
     </svg>
   );
+}
+
+function getChartPoints(token: Token, trades: Trade[]) {
+  const tradePrices = trades
+    .map((trade) => (trade.amount > 0 ? trade.valueUsd / trade.amount : 0))
+    .filter((price) => Number.isFinite(price) && price > 0)
+    .reverse();
+
+  const prices = tradePrices.length >= 4 ? tradePrices : seededPriceSeries(token);
+  const min = Math.min(...prices);
+  const max = Math.max(...prices);
+  const range = max - min || Math.max(max, 1);
+
+  return prices.map((price, index) => ({
+    x: prices.length === 1 ? 0 : (index / (prices.length - 1)) * 900,
+    y: 320 - ((price - min) / range) * 270
+  }));
+}
+
+function seededPriceSeries(token: Token) {
+  const seed = Array.from(token.address).reduce((sum, char) => sum + char.charCodeAt(0), 0);
+  const steps = 18;
+  const direction = token.change24h >= 0 ? 1 : -1;
+  const volatility = Math.min(Math.max(Math.abs(token.change24h) / 100, 0.06), 0.45);
+  let price = token.price > 0 ? token.price : 1;
+
+  return Array.from({ length: steps }, (_, index) => {
+    const wave = Math.sin((seed + index * 19) * 0.21) * volatility;
+    const drift = direction * (index / (steps - 1)) * volatility;
+    price = Math.max(price * (1 + wave * 0.16 + drift * 0.08), price * 0.55);
+    return price;
+  });
+}
+
+function buildSmoothPath(points: Array<{ x: number; y: number }>) {
+  if (points.length === 0) {
+    return "M0 180 L900 180";
+  }
+
+  return points.reduce((path, point, index) => {
+    if (index === 0) {
+      return `M${point.x.toFixed(1)} ${point.y.toFixed(1)}`;
+    }
+
+    const previous = points[index - 1];
+    const controlX = previous.x + (point.x - previous.x) / 2;
+    return `${path} C${controlX.toFixed(1)} ${previous.y.toFixed(1)} ${controlX.toFixed(1)} ${point.y.toFixed(1)} ${point.x.toFixed(1)} ${point.y.toFixed(1)}`;
+  }, "");
 }
 
 function estimateQuote(token: Token, amount: number, side: "buy" | "sell") {

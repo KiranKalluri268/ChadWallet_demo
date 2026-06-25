@@ -26,7 +26,7 @@ export function AuthButton({ compact = false }: { compact?: boolean }) {
         className="inline-flex h-[52px] items-center gap-2 rounded-full bg-white px-6 text-sm font-semibold text-ink transition hover:bg-acid"
       >
         <Wallet className="h-4 w-4" />
-        {compact ? "Wallet" : wallet ? `${wallet.slice(0, 4)}...${wallet.slice(-4)}` : "Connected"}
+        {compact ? "Sign out" : wallet ? `${wallet.slice(0, 4)}...${wallet.slice(-4)}` : "Sign out"}
         <LogOut className="h-4 w-4" />
       </button>
     );

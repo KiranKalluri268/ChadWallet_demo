@@ -67,7 +67,7 @@ export function StoreButtons({ storeBadges = false }: { storeBadges?: boolean })
         className="group inline-flex h-12 items-center justify-center rounded-full border border-white/15 px-5 text-sm font-bold text-white transition hover:border-acid/55 hover:bg-white/[0.06] hover:shadow-[0_0_34px_rgba(184,255,60,0.24)] focus:outline-none focus-visible:outline-none"
       >
         {/* Hidden on mobile (w-0 mr-0), slides in with spacing on desktop hover */}
-        <Download className="h-4 w-4 shrink-0 transition-all duration-200 w-0 opacity-0 overflow-hidden mr-0 sm:group-hover:w-4 sm:group-hover:opacity-100 sm:group-hover:mr-2" />
+        <Download className="h-4 w-0 shrink-0 transition-all duration-200 opacity-0 overflow-hidden mr-0 sm:group-hover:w-4 sm:group-hover:opacity-100 sm:group-hover:mr-2" />
         iPhone
       </a>
       <a
@@ -77,7 +77,7 @@ export function StoreButtons({ storeBadges = false }: { storeBadges?: boolean })
         className="group inline-flex h-12 items-center justify-center rounded-full border border-white/15 px-5 text-sm font-bold text-white transition hover:border-acid/55 hover:bg-white/[0.06] hover:shadow-[0_0_34px_rgba(184,255,60,0.24)] focus:outline-none focus-visible:outline-none"
       >
         {/* Hidden on mobile (w-0 mr-0), slides in with spacing on desktop hover */}
-        <Download className="h-4 w-4 shrink-0 transition-all duration-200 w-0 opacity-0 overflow-hidden mr-0 sm:group-hover:w-4 sm:group-hover:opacity-100 sm:group-hover:mr-2" />
+        <Download className="h-4 w-0 shrink-0 transition-all duration-200 opacity-0 overflow-hidden mr-0 sm:group-hover:w-4 sm:group-hover:opacity-100 sm:group-hover:mr-2" />
         Android
       </a>
     </div>

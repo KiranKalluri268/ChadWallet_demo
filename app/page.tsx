@@ -224,13 +224,14 @@ function FinalCta({ leader }: { leader: Token }) {
           </p>
         </div>
         <div className="flex flex-col gap-8 lg:min-w-[32rem]">
-          <div className="grid grid-cols-2 gap-8 sm:grid-cols-3">
+          {/* Mobile: 3-col grid with dividing borders for clean alignment */}
+          <div className="grid grid-cols-3 divide-x divide-white/10 rounded-lg border border-white/10 sm:divide-x-0 sm:rounded-none sm:border-0 sm:grid-cols-3 sm:gap-8">
             {footerLinks.map((group) => (
-              <div key={group.title}>
-                <p className="mb-4 text-xs font-bold uppercase tracking-[0.16em] text-white/28">{group.title}</p>
-                <div className="flex flex-col gap-3">
+              <div key={group.title} className="flex flex-col gap-2 px-3 py-4 sm:gap-3 sm:px-0 sm:py-0">
+                <p className="mb-1 text-[10px] font-bold uppercase tracking-[0.16em] text-white/28 sm:mb-4 sm:text-xs">{group.title}</p>
+                <div className="flex flex-col gap-2 sm:gap-3">
                   {group.links.map((link) => (
-                    <a key={link.label} href={link.href} className="text-sm font-black text-white transition hover:text-acid">
+                    <a key={link.label} href={link.href} className="text-xs font-black text-white transition hover:text-acid sm:text-sm">
                       {link.label}
                     </a>
                   ))}

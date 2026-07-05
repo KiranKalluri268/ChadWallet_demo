@@ -1,23 +1,20 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { usePathname } from "next/navigation";
 import {
-  ArrowDownUp,
   BadgeDollarSign,
-  CandlestickChart,
   ChevronDown,
   Copy,
   ExternalLink,
-  Radio,
   Search,
-  ShieldCheck,
   Star,
-  TrendingUp,
   Wallet
 } from "lucide-react";
 import { usePrivy } from "@privy-io/react-auth";
+import { TradingViewChart } from "@/components/trading-view-chart";
 import type { Holder, Token, Trade } from "@/lib/types";
 import { clsx, formatCompact, formatUsd } from "@/lib/format";
 import { SOL_MINT } from "@/lib/demo-data";
@@ -35,6 +32,11 @@ type WalletState = {
   source: "alchemy" | "fallback" | "loading";
 };
 
+type SidebarTab = "Alerts" | "Tokens" | "Leaderboard" | "Feed";
+type TokenFilter = "Watchlist" | "Crypto" | "Trending" | "Most held";
+type TableTab = "Holders" | "Swaps" | "Thesis";
+type RangeTab = "5M" | "1H" | "4H" | "1D";
+
 export function TradingPage({ tokens, token, holders, trades }: { tokens: Token[]; token: Token; holders: Holder[]; trades: Trade[] }) {
   const [side, setSide] = useState<"buy" | "sell">("buy");
   const [amount, setAmount] = useState("1.5");
@@ -42,6 +44,10 @@ export function TradingPage({ tokens, token, holders, trades }: { tokens: Token[
   const [query, setQuery] = useState("");
   const [copied, setCopied] = useState(false);
   const [watchlist, setWatchlist] = useState<string[]>([]);
+  const [activeSidebarTab, setActiveSidebarTab] = useState<SidebarTab>("Tokens");
+  const [activeTokenFilter, setActiveTokenFilter] = useState<TokenFilter>("Trending");
+  const [activeTableTab, setActiveTableTab] = useState<TableTab>("Holders");
+  const [activeRange, setActiveRange] = useState<RangeTab>("1D");
   const [quote, setQuote] = useState<QuoteState>({ value: null, source: "loading", priceImpactPct: null, route: "Jupiter" });
   const [walletState, setWalletState] = useState<WalletState>({ sol: null, token: null, source: "fallback" });
   const pathname = usePathname();
@@ -51,13 +57,30 @@ export function TradingPage({ tokens, token, holders, trades }: { tokens: Token[
   const localEstimate = useMemo(() => estimateQuote(token, Number(amount || 0), side), [amount, side, token]);
   const filteredTokens = useMemo(() => {
     const normalized = query.trim().toLowerCase();
+    let visible = [...tokens];
 
-    if (!normalized) {
-      return tokens;
+    if (activeSidebarTab === "Alerts") {
+      visible.sort((a, b) => Math.abs(b.change24h) - Math.abs(a.change24h));
+    } else if (activeSidebarTab === "Leaderboard") {
+      visible.sort((a, b) => (b.marketCap || b.volume24h) - (a.marketCap || a.volume24h));
+    } else if (activeSidebarTab === "Feed") {
+      visible.sort((a, b) => b.volume24h - a.volume24h);
     }
 
-    return tokens.filter((item) => [item.symbol, item.name, item.address].some((value) => value.toLowerCase().includes(normalized)));
-  }, [query, tokens]);
+    if (activeTokenFilter === "Watchlist") {
+      visible = visible.filter((item) => watchlist.includes(item.address));
+    } else if (activeTokenFilter === "Trending") {
+      visible.sort((a, b) => b.change24h - a.change24h);
+    } else if (activeTokenFilter === "Most held") {
+      visible.sort((a, b) => b.holders - a.holders);
+    }
+
+    if (!normalized) {
+      return visible;
+    }
+
+    return visible.filter((item) => [item.symbol, item.name, item.address].some((value) => value.toLowerCase().includes(normalized)));
+  }, [activeSidebarTab, activeTokenFilter, query, tokens, watchlist]);
   const isWatched = watchlist.includes(token.address);
 
   useEffect(() => {
@@ -139,13 +162,40 @@ export function TradingPage({ tokens, token, holders, trades }: { tokens: Token[
   }, [authenticated, token.address, wallet]);
 
   return (
-    <section className="mx-auto grid w-full max-w-[96rem] min-w-0 gap-4 px-4 pb-20 pt-24 lg:grid-cols-[18rem_minmax(0,1fr)_22rem] lg:pb-16 lg:pt-5">
-      <aside className="min-w-0 overflow-hidden rounded-lg border border-white/10 bg-white/[0.04] p-4 lg:sticky lg:top-20" style={{ maxHeight: "calc(100vh - 16rem)" }}>
-        <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-sm font-black uppercase tracking-[0.16em] text-white/55">Trending</h2>
-          <Radio className="h-4 w-4 text-acid" />
+    <section className="mx-auto grid w-full max-w-[118rem] min-w-0 gap-0 px-2 pb-4 pt-3 lg:grid-cols-[22rem_minmax(0,1fr)_22rem] lg:px-4">
+      <aside className="min-w-0 overflow-hidden border border-white/10 bg-[#090910] lg:sticky lg:top-3 lg:h-[calc(100vh-7.25rem)]">
+        <div className="flex h-14 items-center justify-between border-b border-white/10 px-4">
+          <Link href="/" className="flex items-center gap-3 text-3xl font-black text-white/85">
+            <Image src="/brand/logo-light.png" alt="ChadWallet" width={38} height={38} className="h-9 w-9 rounded-full bg-white object-contain" />
+            chad
+          </Link>
+          <button className="grid h-8 w-8 place-items-center rounded-md border border-white/10 text-white/35">
+            <ChevronDown className="h-4 w-4" />
+          </button>
         </div>
-        <label className="mb-3 flex h-11 items-center gap-2 rounded-lg border border-white/10 bg-ink/60 px-3">
+        <div className="flex gap-2 border-b border-white/10 px-4 py-3 text-sm font-black text-white/45">
+          {(["Alerts", "Tokens", "Leaderboard", "Feed"] as SidebarTab[]).map((tab) => (
+            <button
+              key={tab}
+              onClick={() => setActiveSidebarTab(tab)}
+              className={clsx("rounded-md px-2 py-1 transition", activeSidebarTab === tab ? "bg-white/10 text-white" : "hover:text-white")}
+            >
+              {tab}
+            </button>
+          ))}
+        </div>
+        <div className="flex gap-2 overflow-x-auto px-4 py-2 text-xs font-black text-white/50 no-scrollbar">
+          {(["Watchlist", "Crypto", "Trending", "Most held"] as TokenFilter[]).map((filter) => (
+            <button
+              key={filter}
+              onClick={() => setActiveTokenFilter(filter)}
+              className={clsx("shrink-0 rounded-md border border-white/8 px-3 py-1 transition", activeTokenFilter === filter ? "bg-white/10 text-white" : "bg-white/[0.03]")}
+            >
+              {filter}
+            </button>
+          ))}
+        </div>
+        <label className="mx-4 mb-2 flex h-10 items-center gap-2 rounded-md border border-white/10 bg-[#05050b] px-3">
           <Search className="h-4 w-4 text-white/35" />
           <input
             value={query}
@@ -154,8 +204,8 @@ export function TradingPage({ tokens, token, holders, trades }: { tokens: Token[
             className="min-w-0 flex-1 bg-transparent text-sm font-semibold outline-none placeholder:text-white/35"
           />
         </label>
-        <div className="max-h-[28rem] space-y-2 overflow-y-auto pr-1 lg:max-h-none" style={{ maxHeight: "calc(100vh - 23rem)" }}>
-          {filteredTokens.map((item) => (
+        <div className="h-[34rem] overflow-y-auto px-3 pb-3 lg:h-[calc(100vh-18.5rem)]">
+          {filteredTokens.length ? filteredTokens.map((item) => (
             <Link
               href={`/trade/${item.address}`}
               key={item.address}
@@ -165,135 +215,224 @@ export function TradingPage({ tokens, token, holders, trades }: { tokens: Token[
                 }
               }}
               className={clsx(
-                "flex min-w-0 items-center justify-between gap-3 rounded-lg border p-3 transition",
-                item.address === token.address ? "border-acid/50 bg-acid/10" : "border-white/8 bg-ink/40 hover:border-white/20"
+                "flex min-w-0 items-center justify-between gap-3 rounded-md px-3 py-2.5 transition",
+                item.address === token.address ? "bg-white/10" : "hover:bg-white/[0.06]"
               )}
             >
               <div className="flex min-w-0 items-center gap-3">
                 <TokenMark token={item} />
                 <div className="min-w-0">
                   <div className="truncate text-sm font-black">{item.symbol}</div>
-                  <div className="truncate text-xs text-white/45">{item.name}</div>
+                  <div className="truncate text-xs text-white/45">{formatUsd(item.price, item.price < 1 ? 6 : 3)}</div>
                 </div>
               </div>
-              <div className={clsx("shrink-0 text-right text-xs font-black", item.change24h >= 0 ? "text-mint" : "text-ember")}>
-                {pendingAddress === item.address && isSwitching ? "Loading" : `${item.change24h >= 0 ? "+" : ""}${item.change24h.toFixed(1)}%`}
+              <div className="shrink-0 text-right">
+                <div className="text-sm font-black text-white">${formatCompact(item.marketCap || item.volume24h)} MC</div>
+                <div className={clsx("text-xs font-black", item.change24h >= 0 ? "text-mint" : "text-ember")}>
+                  {pendingAddress === item.address && isSwitching ? "Loading" : `${item.change24h >= 0 ? "+" : ""}${item.change24h.toFixed(1)}%`}
+                </div>
               </div>
             </Link>
-          ))}
+          )) : (
+            <div className="rounded-md border border-white/10 bg-white/[0.03] p-4 text-sm font-semibold text-white/45">
+              No tokens match this view.
+            </div>
+          )}
         </div>
       </aside>
 
-      <section className="min-w-0 space-y-4">
-        <div className="rounded-lg border border-white/10 bg-white/[0.04] p-5">
+      <section className="min-w-0 border-y border-white/10 bg-[#05050b] lg:border-y-0">
+        <div className="border-b border-white/10 px-3 py-3">
+          <label className="mx-auto flex h-12 w-full max-w-2xl items-center gap-3 rounded-lg border border-white/10 bg-[#090910] px-4">
+            <Search className="h-4 w-4 text-white/35" />
+            <input
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder="Search for tokens or traders..."
+              className="min-w-0 flex-1 bg-transparent text-sm font-semibold outline-none placeholder:text-white/35"
+            />
+            <span className="rounded bg-white/10 px-2 py-1 text-xs font-bold text-white/50">Paste</span>
+          </label>
+        </div>
+
+        <div className="flex min-w-0 flex-col gap-3 px-3 py-3">
           {isSwitching ? (
             <SummarySkeleton />
           ) : (
-            <div className="flex min-w-0 flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
-              <div className="flex min-w-0 items-center gap-4">
+            <div className="flex min-w-0 flex-wrap items-center justify-between gap-3">
+              <div className="flex min-w-0 items-center gap-3">
                 <TokenMark token={token} large />
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-2">
-                    <h1 className="min-w-0 truncate text-3xl font-black">${token.symbol}</h1>
-                    <span className="rounded-full bg-acid/15 px-2 py-1 text-xs font-black text-acid">SOLANA</span>
-                    <button
-                      onClick={() => toggleWatchlist(token.address, watchlist, setWatchlist)}
-                      className={clsx("grid h-8 w-8 place-items-center rounded-full border", isWatched ? "border-acid bg-acid text-ink" : "border-white/10 text-white/50")}
-                      title={isWatched ? "Remove from watchlist" : "Add to watchlist"}
-                    >
-                      <Star className="h-4 w-4" fill={isWatched ? "currentColor" : "none"} />
-                    </button>
+                    <h1 className="min-w-0 truncate text-xl font-black text-white">{token.symbol}</h1>
+                    <span className="truncate text-sm text-white/55">{token.name}</span>
                     <button
                       onClick={() => copyAddress(token.address, setCopied)}
-                      className="grid h-8 w-8 place-items-center rounded-full border border-white/10 text-white/50 transition hover:text-white"
+                      className="grid h-6 w-6 place-items-center rounded border border-white/10 text-white/45 transition hover:text-white"
                       title="Copy token address"
                     >
-                      <Copy className="h-4 w-4" />
+                      <Copy className="h-3.5 w-3.5" />
+                    </button>
+                    <button
+                      onClick={() => toggleWatchlist(token.address, watchlist, setWatchlist)}
+                      className={clsx("grid h-6 w-6 place-items-center rounded border", isWatched ? "border-acid bg-acid text-ink" : "border-white/10 text-white/45")}
+                      title={isWatched ? "Remove from watchlist" : "Add to watchlist"}
+                    >
+                      <Star className="h-3.5 w-3.5" fill={isWatched ? "currentColor" : "none"} />
                     </button>
                     <a
                       href={`https://birdeye.so/token/${token.address}?chain=solana`}
                       target="_blank"
                       rel="noreferrer"
-                      className="grid h-8 w-8 place-items-center rounded-full border border-white/10 text-white/50 transition hover:text-white"
+                      className="grid h-6 w-6 place-items-center rounded border border-white/10 text-white/45 transition hover:text-white"
                       title="Open on BirdEye"
                     >
-                      <ExternalLink className="h-4 w-4" />
+                      <ExternalLink className="h-3.5 w-3.5" />
                     </a>
                   </div>
-                  <p className="mt-1 text-white/50">{token.name}</p>
-                  <p className="mt-1 text-xs text-white/35">{copied ? "Address copied" : `${token.address.slice(0, 8)}...${token.address.slice(-8)}`}</p>
+                  <p className="mt-1 text-xs text-white/35">{copied ? "Address copied" : `${token.address.slice(0, 7)}...${token.address.slice(-7)}`}</p>
                 </div>
               </div>
-              <div className="grid w-full min-w-0 grid-cols-2 gap-3 sm:w-auto sm:grid-cols-4">
-                <Metric label="Price" value={formatUsd(token.price, token.price < 1 ? 6 : 2)} />
-                <Metric label="24h" value={`${token.change24h >= 0 ? "+" : ""}${token.change24h.toFixed(1)}%`} accent={token.change24h >= 0} />
-                <Metric label="Volume" value={`$${formatCompact(token.volume24h)}`} />
-                <Metric label="Holders" value={formatCompact(token.holders)} />
+              <div className="flex max-w-full flex-nowrap gap-2 overflow-x-auto no-scrollbar">
+                <TopMetric label="Market cap" value={`$${formatCompact(token.marketCap || token.volume24h)}`} />
+                <TopMetric label="Price" value={formatUsd(token.price, token.price < 1 ? 6 : 3)} />
+                <TopMetric label="24H change" value={`${token.change24h >= 0 ? "+" : ""}${token.change24h.toFixed(2)}%`} accent={token.change24h >= 0} />
+                <TopMetric label="24H Vol." value={`$${formatCompact(token.volume24h)}`} />
+                <TopMetric label="Liquidity" value={`$${formatCompact(token.liquidity)}`} />
+                <TopMetric label="Holders" value={formatCompact(token.holders)} />
               </div>
             </div>
           )}
-        </div>
 
-        <div className="rounded-lg border border-white/10 bg-white/[0.04] p-5">
-          <div className="mb-4 flex items-center justify-between">
-            <div>
-              <h2 className="text-xl font-black">Price chart</h2>
-              <p className="text-sm text-white/45">TradingView-ready chart surface with live token context.</p>
-            </div>
-            <CandlestickChart className="h-5 w-5 text-acid" />
-          </div>
-          <div className="relative h-[22rem] min-w-0 overflow-hidden rounded-lg border border-white/10 bg-ink">
-            {isSwitching ? <BlockSkeleton /> : <ChartSvg token={token} trades={trades} />}
-            {!isSwitching ? (
-              <div className="absolute left-4 top-4 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-bold text-white/55">
-                {token.symbol}/USD
-              </div>
-            ) : null}
+          <div className="relative h-[26rem] min-w-0 overflow-hidden border border-white/10 bg-[#030409] lg:h-[32rem]">
+            {isSwitching ? <BlockSkeleton /> : <TradingViewChart token={token} trades={trades} />}
           </div>
         </div>
 
-        <div className="grid min-w-0 gap-4 xl:grid-cols-2">
-          <Panel title="Top holders" icon={<ShieldCheck className="h-5 w-5 text-acid" />}>
-            {isSwitching ? <RowsSkeleton /> : <div className="space-y-3">
-              {holders.map((holder) => (
-                <div key={holder.owner} className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto] gap-3 rounded-lg bg-ink/55 p-3">
-                  <div>
-                    <div className="font-bold">{holder.owner}</div>
-                    <div className="text-xs text-white/45">{formatCompact(holder.amount)} tokens</div>
-                  </div>
-                  <div className="text-right">
-                    <div className="font-black">{formatUsd(holder.valueUsd)}</div>
-                    <div className="text-xs text-white/45">{holder.share.toFixed(2)}%</div>
-                  </div>
-                </div>
+        <div className="mx-3 mb-3 overflow-hidden border border-white/10 bg-[#090910]">
+          <div className="flex items-center justify-between border-b border-white/10 px-3 py-2">
+            <div className="flex gap-4 text-sm font-black">
+              {(["Holders", "Swaps", "Thesis"] as TableTab[]).map((tab) => (
+                <button
+                  key={tab}
+                  onClick={() => setActiveTableTab(tab)}
+                  className={clsx("transition", activeTableTab === tab ? "text-white" : "text-white/35 hover:text-white/70")}
+                >
+                  {tab}{tab === "Thesis" ? ` (${trades.length * 301})` : ""}
+                </button>
               ))}
-            </div>}
-          </Panel>
+            </div>
+            <div className="hidden gap-4 text-xs font-bold text-white/45 sm:flex">
+              <span>Thesis only</span>
+              <span>Friends only</span>
+            </div>
+          </div>
+          {isSwitching ? <RowsSkeleton /> : activeTableTab === "Holders" ? (
+            <div className="overflow-x-auto">
+              <div className="grid min-w-[52rem] grid-cols-[1.2fr_0.9fr_0.9fr_0.8fr_1.7fr] border-b border-white/5 px-3 py-2 text-xs font-bold text-white/35">
+                <span>Trader</span>
+                <span>Position</span>
+                <span>PnL</span>
+                <span>Avg. entry</span>
+                <span>Thesis</span>
+              </div>
+              {holders.map((holder, index) => {
+                const profile = getHolderPresentation(holder, token, index);
 
-          <Panel title="Live trades" icon={<TrendingUp className="h-5 w-5 text-acid" />}>
-            {isSwitching ? <RowsSkeleton /> : <div className="space-y-3">
+                return (
+                  <div key={holder.owner} className="grid min-w-[52rem] grid-cols-[1.2fr_0.9fr_0.9fr_0.8fr_1.7fr] items-center px-3 py-3 text-sm odd:bg-white/[0.035]">
+                    <div className="flex min-w-0 items-center gap-3">
+                      <span className={clsx("grid h-8 w-8 place-items-center rounded-full text-xs font-black text-white", profile.avatarColor)}>{profile.avatar}</span>
+                      <div className="min-w-0">
+                        <div className="truncate font-black">{profile.name}</div>
+                        <div className="text-xs text-white/45">{profile.holdTime} avg. hold</div>
+                      </div>
+                    </div>
+                    <div>
+                      <div className="font-black">{formatUsd(profile.positionValue)}</div>
+                      <div className="text-xs text-white/45">{formatCompact(holder.amount)} {token.symbol}</div>
+                    </div>
+                    <div>
+                      <div className={clsx("font-black", profile.pnl >= 0 ? "text-mint" : "text-ember")}>{profile.pnl >= 0 ? "+" : ""}{formatUsd(profile.pnl)}</div>
+                      <div className={clsx("text-xs", profile.pnlPct >= 0 ? "text-mint" : "text-ember")}>{profile.pnlPct >= 0 ? "+" : ""}{profile.pnlPct.toFixed(2)}%</div>
+                    </div>
+                    <div>
+                      <div className="font-black">{formatUsd(profile.avgEntry, profile.avgEntry < 1 ? 6 : 3)}</div>
+                      <div className="text-xs text-white/45">{profile.entryLabel}</div>
+                    </div>
+                    <div className="truncate text-white/85">{profile.note}</div>
+                  </div>
+                );
+              })}
+            </div>
+          ) : activeTableTab === "Swaps" ? (
+            <div className="overflow-x-auto">
+              <div className="grid min-w-[42rem] grid-cols-[0.8fr_1.1fr_1fr_1fr] border-b border-white/5 px-3 py-2 text-xs font-bold text-white/35">
+                <span>Side</span>
+                <span>Trader</span>
+                <span>Amount</span>
+                <span>Value</span>
+              </div>
               {trades.map((trade) => (
-                <div key={trade.id} className="grid min-w-0 grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 rounded-lg bg-ink/55 p-3">
-                  <span className={clsx("rounded-full px-2 py-1 text-xs font-black", trade.side === "buy" ? "bg-mint/15 text-mint" : "bg-ember/15 text-ember")}>
-                    {trade.side.toUpperCase()}
-                  </span>
+                <div key={trade.id} className="grid min-w-[42rem] grid-cols-[0.8fr_1.1fr_1fr_1fr] items-center px-3 py-3 text-sm odd:bg-white/[0.035]">
+                  <span className={clsx("w-fit rounded px-2 py-1 text-xs font-black", trade.side === "buy" ? "bg-mint/15 text-mint" : "bg-ember/15 text-ember")}>{trade.side.toUpperCase()}</span>
                   <div>
-                    <div className="font-bold">{trade.wallet}</div>
+                    <div className="font-black">{trade.wallet}</div>
                     <div className="text-xs text-white/45">{trade.timestamp}</div>
                   </div>
-                  <div className="text-right">
-                    <div className="font-black">{formatUsd(trade.valueUsd)}</div>
-                    <div className="text-xs text-white/45">{formatCompact(trade.amount)}</div>
-                  </div>
+                  <div className="font-black">{formatCompact(trade.amount)} {token.symbol}</div>
+                  <div className="font-black">{formatUsd(trade.valueUsd)}</div>
                 </div>
               ))}
-            </div>}
-          </Panel>
+            </div>
+          ) : (
+            <div className="divide-y divide-white/5">
+              {holders.slice(0, 8).map((holder, index) => {
+                const profile = getHolderPresentation(holder, token, index);
+
+                return (
+                  <div key={holder.owner} className="grid gap-2 px-3 py-4 text-sm odd:bg-white/[0.035] sm:grid-cols-[12rem_1fr_auto] sm:items-center">
+                    <div className="flex items-center gap-3">
+                      <span className={clsx("grid h-8 w-8 place-items-center rounded-full text-xs font-black text-white", profile.avatarColor)}>{profile.avatar}</span>
+                      <div>
+                        <div className="font-black">{profile.name}</div>
+                        <div className="text-xs text-white/45">{profile.holdTime} avg. hold</div>
+                      </div>
+                    </div>
+                    <div className="text-white/85">{profile.note}</div>
+                    <div className={clsx("font-black", profile.pnlPct >= 0 ? "text-mint" : "text-ember")}>{profile.pnlPct >= 0 ? "+" : ""}{profile.pnlPct.toFixed(2)}%</div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
       </section>
 
-      <aside className="min-w-0 space-y-4 lg:sticky lg:top-20 lg:h-max">
-        <div className="rounded-lg border border-acid/20 bg-white/[0.05] p-4">
+      <aside className="min-w-0 border border-white/10 bg-[#090910] p-3 lg:sticky lg:top-3 lg:h-max">
+        <div className="rounded-lg border border-white/10 bg-white/[0.035] p-4">
+          <h2 className="mb-2 text-lg font-black">About {token.symbol}</h2>
+          <p className="text-sm leading-5 text-white/62">
+            {token.name} is moving across the ChadWallet feed. Review holders, live swaps, and quote previews before taking action.
+          </p>
+          <div className="mt-4 grid grid-cols-4 gap-2">
+            {(["5M", "1H", "4H", "1D"] as RangeTab[]).map((range) => (
+              <button
+                key={range}
+                onClick={() => setActiveRange(range)}
+                className={clsx("rounded-md border p-2 text-center transition", activeRange === range ? "border-acid/50 bg-acid/10" : "border-white/10 bg-white/[0.04]")}
+              >
+                <div className="text-xs font-bold text-white/45">{range}</div>
+                <div className={clsx("text-[10px] font-black leading-tight sm:text-xs", token.change24h >= 0 ? "text-mint" : "text-ember")}>
+                  {formatPercent(getRangeChange(token.change24h, range))}
+                </div>
+              </button>
+            ))}
+          </div>
+          <SentimentBars trades={trades} />
+        </div>
+
+        <div className="mt-4 rounded-lg border border-white/10 bg-white/[0.035] p-2">
           <div className="mb-4 grid grid-cols-2 rounded-lg bg-ink p-1">
             {(["buy", "sell"] as const).map((mode) => (
               <button
@@ -307,11 +446,7 @@ export function TradingPage({ tokens, token, holders, trades }: { tokens: Token[
           </div>
 
           <TradeInput label={side === "buy" ? "You pay" : "You sell"} value={amount} onChange={setAmount} symbol={side === "buy" ? "SOL" : token.symbol} />
-          <div className="my-3 grid place-items-center">
-            <span className="grid h-9 w-9 place-items-center rounded-full border border-white/10 bg-ink">
-              <ArrowDownUp className="h-4 w-4 text-acid" />
-            </span>
-          </div>
+          <div className="h-3" />
           <TradeInput
             label={quote.source === "loading" ? "Fetching quote" : "Estimated receive"}
             value={(quote.value ?? localEstimate).toLocaleString("en-US", { maximumFractionDigits: 4 })}
@@ -339,7 +474,7 @@ export function TradingPage({ tokens, token, holders, trades }: { tokens: Token[
           </p>
         </div>
 
-        <div className="rounded-lg border border-white/10 bg-white/[0.04] p-4">
+        <div className="mt-4 rounded-lg border border-white/10 bg-white/[0.035] p-4">
           <div className="mb-4 flex items-center gap-2">
             <Wallet className="h-5 w-5 text-acid" />
             <h2 className="font-black">Your position</h2>
@@ -438,14 +573,43 @@ function Metric({ label, value, accent }: { label: string; value: string; accent
   );
 }
 
-function Panel({ title, icon, children }: { title: string; icon: React.ReactNode; children: React.ReactNode }) {
+function TopMetric({ label, value, accent }: { label: string; value: string; accent?: boolean }) {
   return (
-    <div className="rounded-lg border border-white/10 bg-white/[0.04] p-5">
-      <div className="mb-4 flex items-center justify-between">
-        <h2 className="text-xl font-black">{title}</h2>
-        {icon}
+    <div className="min-w-[5.15rem] rounded-lg bg-white/[0.06] px-3 py-2 text-center">
+      <div className="text-xs font-bold text-white/45">{label}</div>
+      <div className={clsx("mt-0.5 text-sm font-black", accent ? "text-mint" : "text-white")}>{value}</div>
+    </div>
+  );
+}
+
+function SentimentBars({ trades }: { trades: Trade[] }) {
+  const buys = trades.filter((trade) => trade.side === "buy");
+  const sells = trades.filter((trade) => trade.side === "sell");
+  const buyVolume = buys.reduce((sum, trade) => sum + trade.valueUsd, 0);
+  const sellVolume = sells.reduce((sum, trade) => sum + trade.valueUsd, 0);
+  const buyCount = Math.max(buys.length, 1);
+  const sellCount = Math.max(sells.length, 1);
+
+  return (
+    <div className="mt-4 space-y-3 text-sm font-black">
+      <SplitBar left={`${buyCount * 51} buys`} right={`${sellCount * 49} sells`} leftWidth={58} />
+      <SplitBar left={`${formatUsd(buyVolume || 514700)} vol.`} right={`${formatUsd(sellVolume || 481200)} vol.`} leftWidth={52} />
+      <SplitBar left={`${buyCount * 36} buyers`} right={`${sellCount * 39} sellers`} leftWidth={49} />
+    </div>
+  );
+}
+
+function SplitBar({ left, right, leftWidth }: { left: string; right: string; leftWidth: number }) {
+  return (
+    <div>
+      <div className="mb-1 flex justify-between">
+        <span>{left}</span>
+        <span>{right}</span>
       </div>
-      {children}
+      <div className="flex h-1.5 overflow-hidden rounded-full bg-white/10">
+        <span className="bg-mint" style={{ width: `${leftWidth}%` }} />
+        <span className="flex-1 bg-ember" />
+      </div>
     </div>
   );
 }
@@ -495,82 +659,68 @@ function copyAddress(address: string, setCopied: (value: boolean) => void) {
   window.setTimeout(() => setCopied(false), 1600);
 }
 
-function ChartSvg({ token, trades }: { token: Token; trades: Trade[] }) {
-  const positive = token.change24h >= 0;
-  const stroke = positive ? "#68F7B3" : "#FF7A3D";
-  const points = getChartPoints(token, trades);
-  const linePath = buildSmoothPath(points);
-  const fillPath = `${linePath} L900 360 L0 360 Z`;
+function getHolderPresentation(holder: Holder, token: Token, index: number) {
+  const seed = hashString(`${holder.owner}-${token.address}`);
+  const names = ["chainmaxi", "solhuntr", "mooncurator", "greenledger", "vaultpilot", "tape_reader", "degenintel", "liquiditydad", "trendwarden", "entrysniper"];
+  const colors = ["bg-sky-500", "bg-emerald-500", "bg-fuchsia-500", "bg-amber-500", "bg-indigo-500", "bg-rose-500", "bg-cyan-500", "bg-lime-500"];
+  const notes = [
+    `watching ${token.symbol} while volume builds`,
+    `rotated into ${token.symbol} before the crowd`,
+    "holding as long as buyers keep stepping in",
+    "took profit, still keeping a runner",
+    "tracking holder growth before adding"
+  ];
+  const fallbackValue = holder.amount * token.price;
+  const positionValue = holder.valueUsd > 0 ? holder.valueUsd : fallbackValue;
+  const changeBias = token.change24h / 100;
+  const personalBias = ((seed % 71) - 24) / 100;
+  const pnlPct = Math.max(-88, Math.min(420, (changeBias + personalBias) * 100));
+  const pnl = positionValue * (pnlPct / 100);
+  const avgEntry = token.price > 0 ? token.price / (1 + pnlPct / 100) : 0;
+  const handle = names[seed % names.length];
+  const suffix = String((seed + index * 17) % 1000).padStart(3, "0");
 
-  return (
-    <svg viewBox="0 0 900 360" className="h-full w-full" preserveAspectRatio="none" role="img" aria-label="Token price chart">
-      <defs>
-        <linearGradient id="chartFill" x1="0" x2="0" y1="0" y2="1">
-          <stop offset="0%" stopColor={stroke} stopOpacity="0.36" />
-          <stop offset="100%" stopColor={stroke} stopOpacity="0" />
-        </linearGradient>
-      </defs>
-      {Array.from({ length: 8 }).map((_, index) => (
-        <line key={`h-${index}`} x1="0" x2="900" y1={index * 52} y2={index * 52} stroke="rgba(255,255,255,0.06)" />
-      ))}
-      {Array.from({ length: 10 }).map((_, index) => (
-        <line key={`v-${index}`} x1={index * 100} x2={index * 100} y1="0" y2="360" stroke="rgba(255,255,255,0.05)" />
-      ))}
-      <path d={fillPath} fill="url(#chartFill)" />
-      <path d={linePath} fill="none" stroke={stroke} strokeWidth="5" strokeLinecap="round" />
-      {points.map((point, index) => (
-        index % 3 === 0 ? <circle key={`${point.x}-${point.y}`} cx={point.x} cy={point.y} r="4" fill={stroke} opacity="0.7" /> : null
-      ))}
-    </svg>
-  );
+  return {
+    name: `${handle}${suffix}`,
+    avatar: handle.slice(0, 2).toUpperCase(),
+    avatarColor: colors[seed % colors.length],
+    holdTime: `${(seed % 21) + 1}h`,
+    positionValue,
+    pnl,
+    pnlPct,
+    avgEntry: Number.isFinite(avgEntry) && avgEntry > 0 ? avgEntry : token.price,
+    entryLabel: pnlPct >= 0 ? "below spot" : "above spot",
+    note: notes[(seed + index) % notes.length]
+  };
 }
 
-function getChartPoints(token: Token, trades: Trade[]) {
-  const tradePrices = trades
-    .map((trade) => (trade.amount > 0 ? trade.valueUsd / trade.amount : 0))
-    .filter((price) => Number.isFinite(price) && price > 0)
-    .reverse();
-
-  const prices = tradePrices.length >= 4 ? tradePrices : seededPriceSeries(token);
-  const min = Math.min(...prices);
-  const max = Math.max(...prices);
-  const range = max - min || Math.max(max, 1);
-
-  return prices.map((price, index) => ({
-    x: prices.length === 1 ? 0 : (index / (prices.length - 1)) * 900,
-    y: 320 - ((price - min) / range) * 270
-  }));
+function hashString(value: string) {
+  return Array.from(value).reduce((hash, char) => (hash * 31 + char.charCodeAt(0)) >>> 0, 7);
 }
 
-function seededPriceSeries(token: Token) {
-  const seed = Array.from(token.address).reduce((sum, char) => sum + char.charCodeAt(0), 0);
-  const steps = 18;
-  const direction = token.change24h >= 0 ? 1 : -1;
-  const volatility = Math.min(Math.max(Math.abs(token.change24h) / 100, 0.06), 0.45);
-  let price = token.price > 0 ? token.price : 1;
+function getRangeChange(change24h: number, range: RangeTab) {
+  const scale = {
+    "5M": 0.08,
+    "1H": 0.22,
+    "4H": 0.55,
+    "1D": 1
+  }[range];
 
-  return Array.from({ length: steps }, (_, index) => {
-    const wave = Math.sin((seed + index * 19) * 0.21) * volatility;
-    const drift = direction * (index / (steps - 1)) * volatility;
-    price = Math.max(price * (1 + wave * 0.16 + drift * 0.08), price * 0.55);
-    return price;
-  });
+  return change24h * scale;
 }
 
-function buildSmoothPath(points: Array<{ x: number; y: number }>) {
-  if (points.length === 0) {
-    return "M0 180 L900 180";
+function formatPercent(value: number) {
+  const sign = value >= 0 ? "+" : "";
+
+  if (Math.abs(value) >= 1000) {
+    return `${sign}${(value / 1000).toFixed(1)}K%`;
   }
 
-  return points.reduce((path, point, index) => {
-    if (index === 0) {
-      return `M${point.x.toFixed(1)} ${point.y.toFixed(1)}`;
-    }
+  if (Math.abs(value) >= 100) {
+    return `${sign}${value.toFixed(1)}%`;
+  }
 
-    const previous = points[index - 1];
-    const controlX = previous.x + (point.x - previous.x) / 2;
-    return `${path} C${controlX.toFixed(1)} ${previous.y.toFixed(1)} ${controlX.toFixed(1)} ${point.y.toFixed(1)} ${point.x.toFixed(1)} ${point.y.toFixed(1)}`;
-  }, "");
+  return `${sign}${value.toFixed(2)}%`;
 }
 
 function estimateQuote(token: Token, amount: number, side: "buy" | "sell") {

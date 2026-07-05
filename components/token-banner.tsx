@@ -1,4 +1,7 @@
+"use client";
+
 import Link from "next/link";
+import { useState } from "react";
 import type { Token } from "@/lib/types";
 import { clsx, formatCompact, formatUsd } from "@/lib/format";
 
@@ -33,9 +36,7 @@ export function TokenBanner({ tokens, reverse = false, subtle = false, withHeade
             )}
           >
             <span className="flex items-center gap-3">
-              <span className="grid h-9 w-9 place-items-center rounded-full bg-acid text-xs font-black text-ink">
-                {token.symbol.slice(0, 2)}
-              </span>
+              <BannerTokenMark token={token} />
               <span>
                 <span className="block text-sm font-black">{token.symbol}</span>
                 <span className="block text-xs text-white/50">{formatUsd(token.price, token.price < 1 ? 6 : 2)}</span>
@@ -51,5 +52,30 @@ export function TokenBanner({ tokens, reverse = false, subtle = false, withHeade
         </div>
       </div>
     </div>
+  );
+}
+
+function BannerTokenMark({ token }: { token: Token }) {
+  const [failed, setFailed] = useState(false);
+
+  if (token.image && !failed) {
+    return (
+      // Remote token logos can expire or 404; fall back to initials if that happens.
+      // eslint-disable-next-line @next/next/no-img-element
+      <img
+        src={token.image}
+        alt={token.symbol}
+        width={36}
+        height={36}
+        onError={() => setFailed(true)}
+        className="h-9 w-9 shrink-0 rounded-full object-cover"
+      />
+    );
+  }
+
+  return (
+    <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-acid text-xs font-black text-ink">
+      {token.symbol.slice(0, 2)}
+    </span>
   );
 }
